@@ -43,6 +43,18 @@ template<class P = vector<double>, class V = vector<double> > struct Objective {
 	}
 };
 
+template<class P = vector<double>, class V = vector<double> > struct Preconditioner {
+	
+	double precondition(V& grad, const P& iterate) {
+		double norm = 0;
+		for (int i = 0; i < grad.size(); ++i) {
+			norm += grad[i] * grad[i] / (i + 2);
+			grad[i] /= (i + 2);
+		}
+		return norm;
+	}
+};
+
 template<class P = vector<double>, class V = vector<double> > struct Retraction {
 	
 	void retract(P& input, const V& direction, double distance) {
