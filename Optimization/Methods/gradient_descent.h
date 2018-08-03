@@ -37,7 +37,6 @@ int gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retra
 	P temporary_iterate(iterate);
 	V grad;
 	double obj = objective.evaluate(iterate);
-	double step_size = 1e-1;
 
 	int it = 0;
 	while(1) {
@@ -55,7 +54,7 @@ int gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retra
 		bool done_increase = false;
 		while (!done_increase) {
 			step_size /= eta;
-			retraction.retract(iterate, -1.0 * grad, step_size);
+			retraction.retract(iterate, grad, -1.0 * step_size);
 			double F = objective.evaluate(iterate);
 			if (F <= obj - rho * step_size * grad_norm_sq) {
 				step_size /= eta;
@@ -66,10 +65,11 @@ int gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retra
 		}
 		bool done_decrease = false;
 		while (!done_decrease) {
-			retraction.retract(iterate, -1.0 * grad, step_size);
+			retraction.retract(iterate, grad, -1.0 * step_size);
 			double F = objective.evaluate(iterate);
                         if (F <= obj - rho * step_size * grad_norm_sq) {
                                 done_decrease = true;
+				obj = F;
                         } else {
                                 step_size *= eta;
 				iterate = temporary_iterate;
