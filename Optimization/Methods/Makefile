@@ -7,7 +7,7 @@
 
 CC = g++
 OPT = -lm -std=c++11
-test : .gradient_descent_test .accelerated_gradient_descent_test .preconditioned_gradient_descent_test
+test : .gradient_descent_test .accelerated_gradient_descent_test .preconditioned_gradient_descent_test .preconditioned_accelerated_gradient_descent_test
 
 .gradient_descent_test : gradient_descent.h test_lib.h gradient_descent_test.cpp
 	$(CC) -o gradient_descent_test.exe gradient_descent_test.cpp $(OPT)
@@ -21,3 +21,7 @@ test : .gradient_descent_test .accelerated_gradient_descent_test .preconditioned
 	$(CC) -o preconditioned_gradient_descent_test.exe preconditioned_gradient_descent_test.cpp $(OPT)
 	./preconditioned_gradient_descent_test.exe
 	 
+
+.preconditioned_accelerated_gradient_descent_test : preconditioned_accelerated_gradient_descent.h test_lib.h preconditioned_accelerated_gradient_descent_test.cpp
+	$(CC) -o preconditioned_accelerated_gradient_descent_test.exe preconditioned_accelerated_gradient_descent_test.cpp $(OPT)
+	./preconditioned_accelerated_gradient_descent_test.exe
