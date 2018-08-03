@@ -1,6 +1,7 @@
  /* This file is part of an open source library for electronic structure calculations.
  *
- *  It contains code which tests the gradient descent method on a simple quadratic function. 
+ *  It contains code which tests the accelerated gradient descent method on a 
+ *  simple quadratic function. 
  *
  *  Copyright (C) 2018 Jonathan W. Siegel
  *
@@ -22,14 +23,14 @@
 #include<cstdlib>
 #include<cstdio>
 #include "test_lib.h"
-#include "gradient_descent.h"
+#include "accelerated_gradient_descent.h"
 
 using std::vector;
 
 int main() {
 	int n = 10;
 	vector<double> iterate(10, 1.0);
-	int iteration_count = gradient_descent(iterate, Objective<>(), Retraction<>());
+	int iteration_count = accelerated_gradient_descent(iterate, Objective<>(), Retraction<>());
 	if (iterate.size() != 10) {
 		printf("Test Failed: Vector changed size unexpectedly.\n");
 		return -1;
