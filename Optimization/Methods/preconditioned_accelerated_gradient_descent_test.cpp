@@ -26,6 +26,7 @@
 #include "preconditioned_accelerated_gradient_descent.h"
 
 using std::vector;
+using optimization::methods::preconditioned_accelerated_gradient_descent;
 
 int main() {
 	int n = 10;

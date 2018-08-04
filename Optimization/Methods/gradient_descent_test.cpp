@@ -25,6 +25,7 @@
 #include "gradient_descent.h"
 
 using std::vector;
+using optimization::methods::gradient_descent;
 
 int main() {
 	int n = 10;

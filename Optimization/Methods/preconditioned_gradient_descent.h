@@ -30,6 +30,9 @@
 
 #include<cmath>
 
+namespace optimization {
+namespace methods {
+
 template<class P, class V, template<class, class> class Objective, template<class, class> class Retraction, template<class, class> class Preconditioner>
 int preconditioned_gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retraction, Preconditioner<P,V> preconditioner, double gtol = 1e-4) {
 	const static double rho = 5e-1; // Parameter for the Armijo condition.
@@ -83,5 +86,8 @@ int preconditioned_gradient_descent(P& iterate, Objective<P,V> objective, Retrac
 		++it;
 	}
 }
+
+} // namespace methods
+} // namespace optimization
 
 #endif

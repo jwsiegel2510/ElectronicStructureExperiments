@@ -33,6 +33,9 @@
 
 #include<cmath>
 
+namespace optimization {
+namespace methods {
+
 template<class P, class V, template<class, class> class Objective, template<class, class> class Retraction, template<class, class> class Preconditioner>
 int preconditioned_accelerated_gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retraction, Preconditioner<P,V> preconditioner, double gtol = 1e-4) {
 	const static double restart_rho = 1e-2; // Parameter determining the sufficient decrease which triggers a restart.
@@ -99,5 +102,8 @@ int preconditioned_accelerated_gradient_descent(P& iterate, Objective<P,V> objec
 		++it;
 	}
 }
+
+} // namespace methods
+} // namespace optimization
 	
 #endif

@@ -29,6 +29,9 @@
 
 #include<cmath>
 
+namespace optimization {
+namespace methods {
+
 template<class P, class V, template<class, class> class Objective, template<class, class> class Retraction>
 int accelerated_gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retraction, double gtol = 1e-4) {
 	const static double restart_rho = 1e-2; // Parameter determining the sufficient decrease which triggers a restart.
@@ -92,5 +95,7 @@ int accelerated_gradient_descent(P& iterate, Objective<P,V> objective, Retractio
 		++it;
 	}
 }
-	
+
+} // namespace methods
+} // namespace optimization
 #endif
