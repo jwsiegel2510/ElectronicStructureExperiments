@@ -49,7 +49,7 @@ template<class P, class V> void StiefelCayleyRetraction<P,V>::retract(P& iterate
 	U.block(0, iterate.cols(), iterate.rows(), iterate.cols()) = 0.5 * dt * iterate;
 	VM.block(0, 0, iterate.rows(), iterate.cols()) = iterate;
 	VM.block(0, iterate.cols(), iterate.rows(), iterate.cols()) = direction;
-	iterate = iterate - 2.0 * U * (MatrixXd::Identity(2 * iterate.cols(), 2 * iterate.cols()) + VM.transpose() * U).partialPivLu().solve(VM.transpose() * iterate);
+	iterate = iterate - 2.0 * U * (P::Identity(2 * iterate.cols(), 2 * iterate.cols()) + VM.transpose() * U).partialPivLu().solve(VM.transpose() * iterate);
 }
 
 template<class P, class V> double StiefelCayleyRetraction<P,V>::norm_sq(const V& grad, const P& iterate) {
@@ -60,7 +60,7 @@ template<class P, class V> double StiefelCayleyRetraction<P,V>::norm_sq(const V&
 }
 
 template<class P, class V> void StiefelCayleyRetraction<P,V>::extrapolate(P& output, const P& point_one, const P& point_two, double beta) {
-	X = 2.0 * (P::Identity(iterate.cols(), iterate.cols()) + point_two.transpose() * point_one).partialPivLu().solve(point_two.transpose()).transpose();
+	X = 2.0 * (P::Identity(point_one.cols(), point_one.cols()) + point_two.transpose() * point_one).partialPivLu().solve(point_two.transpose()).transpose();
 	output = point_one;
 	retract(output, X, 1.0 + beta);
 }
