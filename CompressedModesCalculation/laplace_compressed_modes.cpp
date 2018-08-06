@@ -23,9 +23,11 @@
 #include "../EigenLib/Eigen/Dense"
 #include "../Optimization/Methods/accelerated_gradient_descent.h"
 #include "../Optimization/Retractions/stiefel_cayley_retraction.h"
+#include "../SCC-Utility/CmdOptionUtility.h"
 #include "compressed_modes_objective.h"
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 
 namespace {
 	using ::Eigen::MatrixXd;
@@ -54,15 +56,43 @@ namespace {
 	};	
 }
 
-int main() {
+int main(int argc, char** argv) {
+	// Get input XML filename and output filename.
+	string parameterFileName;
+	string outputFileName;
+	CmdOptionUtility optionUtility;
+	parameterFileName = optionUtility.getCmdOption(argc,argv,"-f");
+	outputFileName = optionUtility.getCmdOption(argc,argv,"-o");
+	if (parameterFileName.empty() || outputFileName.empty()) {
+		printf("XML filename must be passed with -f flag and output filename must be passed with -o flag.\n");
+		return -1;
+	}
+
+/*	// Initialize parameters from XML file.
+	XML_ParameterListArray paramList;
+	paramList.setAbortOnErrorFlag();
+	paramList.initialize(parameterFileName.c_str());
+	double mu = paramList.getParameterValue("mu", "Parameters");
+	double epsilon = paramList.getParameterValue("epsilon", "Parameters");
+	int n = paramList.getParameterValue("GridPoints", "Parameters");
+	int k = paramList.getParameterValue("ModesCount", "Parameters");*/
+
 	double mu = .1;
 	double epsilon = .001;
-	const IOFormat fmt(-1, 1, "\t", " \n ", "(", ")", "\n", "\n");	
-	MatrixXd iterate(50,5);
+	int n = 100;
+	int k = 50;
+
+	// Perform Calculation.
+	MatrixXd iterate(n,k);
 	LaplaceOperator op_;
 	CompressedModesObjective<MatrixXd, MatrixXd, LaplaceOperator> objective(op_, mu, epsilon);
 	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
 	retraction.generate_random_point(iterate);
 	accelerated_gradient_descent(iterate, objective, retraction);
-	std::cout << iterate.format(fmt) << "\n";
+
+	// Output Result.
+	const IOFormat fmt(-1, 1, "\t", " \n ", "(", ")", "\n", "\n");
+	std::ofstream out;
+	out.open(outputFileName);
+	out << iterate.format(fmt) << "\n";
 }
