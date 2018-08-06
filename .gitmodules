@@ -1,3 +1,6 @@
 [submodule "EigenLib"]
 	path = EigenLib
 	url = https://github.com/eigenteam/eigen-git-mirror
+[submodule "XML-ParameterList"]
+	path = XML-ParameterList
+	url = https://github.com/apmcollab/SCC-XML_ParameterList
