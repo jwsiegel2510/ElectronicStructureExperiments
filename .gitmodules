@@ -4,3 +4,6 @@
 [submodule "XML-ParameterList"]
 	path = XML-ParameterList
 	url = https://github.com/apmcollab/SCC-XML_ParameterList
+[submodule "SCC-Utility"]
+	path = SCC-Utility
+	url = https://github.com/apmcollab/SCC-Utility
