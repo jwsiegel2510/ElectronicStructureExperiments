@@ -9,6 +9,11 @@
  *  norm of a dual tangent vector and method which applies the preconditioner must
  *  also return the norm of the preconditioned gradient.
  *
+ *  The templated classes which implement the objective, retraction, and preconditioner must take
+ *  the point and dual tangent vector classes as template arguments. They may also
+ *  take additional template arguments as long as the point and dual tangent vector
+ *  classes are the only template arguments shared between them.
+ *
  *  Copyright (C) 2018 Jonathan W. Siegel
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -33,8 +38,11 @@
 namespace optimization {
 namespace methods {
 
-template<class P, class V, template<class, class> class Objective, template<class, class> class Retraction, template<class, class> class Preconditioner>
-int preconditioned_gradient_descent(P& iterate, Objective<P,V> objective, Retraction<P,V> retraction, Preconditioner<P,V> preconditioner, double gtol = 1e-4) {
+template<class P, class V, template<class, class, typename ... > class Objective, template<class, class, typename ... > class Retraction, 
+template<class, class, typename ... > class Preconditioner, typename ... AdditionalArgsObj, typename ... AdditionalArgsRtr, typename ... AdditionalArgsPC>
+int preconditioned_gradient_descent(P& iterate, Objective<P, V, AdditionalArgsObj ... > objective, 
+						Retraction<P, V, AdditionalArgsRtr ... > retraction, 
+						Preconditioner<P, V, AdditionalArgsPC ... > preconditioner, double gtol = 1e-4) {
 	const static double rho = 5e-1; // Parameter for the Armijo condition.
 	const static double eta = .5; // Parameter determining the factor by which the step decreases if Armijo condition isn't met.
 	double step_size = 1e-1; // Initial step size.

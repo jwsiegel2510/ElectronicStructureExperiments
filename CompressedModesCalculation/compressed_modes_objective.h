@@ -1,9 +1,9 @@
 /* This file is part of an open source library for electronic structure calculations.
  *
  *  It contains a templated implementation of the compressed modes objective. One template
- *  parameter is a class which applies the linear operator. The other is a class which
- *  represents matrices. We assume that the synthax for this class is the same as the synthax
- *  for Eigen matrices.
+ *  parameter is a class which applies the linear operator. The others are classes which
+ *  represent matrices (points and dual tangent vectors). We assume that the syntax for 
+ *  these classes is the same as the syntax for Eigen matrices.
  *
  *  Copyright (C) 2018 Jonathan W. Siegel
  *
@@ -28,7 +28,7 @@
 
 namespace compressed_modes {
 
-template<class Op, class M> class CompressedModesObjective {
+template<class P, class V, class Op> class CompressedModesObjective {
 private:
 	const Op& operator_;
 	double mu; // L1 penalty
@@ -38,17 +38,17 @@ public:
 	CompressedModesObjective() = delete;
 	CompressedModesObjective(Op& operator_in, double mu_, double epsilon_) : operator_(operator_in), mu(mu_), epsilon(epsilon_) {}
 
-	evaluate(const M& input) {
+	double evaluate(const P& input) {
 		double obj = 0;
 		// Evaluate the quadratic part of the compressed modes objective.
 		obj += 0.5 * (input.transpose() * operator_.apply(input)).trace();
 
 		// Evaluate the smoothed L1 penalty.
-		for (int i = 0, i < input.cols(); ++i) {
-			for (int j = 0; j < input.rows(); ++j) {
+		for (int j = 0; j < input.cols(); ++j) {
+			for (int i = 0; i < input.rows(); ++i) {
 				if (input(i,j) > epsilon) {
 					obj += mu * (input(i,j) - epsilon / 2.0);
-				} else if (input(i,j) < -epsilon_) {
+				} else if (input(i,j) < -epsilon) {
 					obj += mu * (-input(i,j) - epsilon / 2.0);
 				} else {
 					obj += mu * input(i,j) * input(i,j) / (2.0 * epsilon);
@@ -58,14 +58,14 @@ public:
 		return obj;
 	}
 
-	evaluate_grad(M& grad, const M& input) {
-		M Ax = operator_.apply(input);
-		for (int i = 0, i < input.cols(); ++i) {
-			for (int j = 0; j < input.rows(); ++j) {
-				grad(i,j) = Ax(i,j);
+	void evaluate_grad(V& grad, const P& input) {
+		grad.resize(input.rows(), input.cols());
+		grad = operator_.apply(input);
+		for (int j = 0; j < input.cols(); ++j) {
+			for (int i = 0; i < input.rows(); ++i) {
 				if (input(i,j) > epsilon) {
 					grad(i,j) += mu;
-				} else if (input(i,j) < -epsilon_) {
+				} else if (input(i,j) < -epsilon) {
 					grad(i,j) -= mu;
 				} else {
 					grad(i,j) += mu * input(i,j) / epsilon;
