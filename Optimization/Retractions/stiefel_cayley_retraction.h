@@ -28,6 +28,10 @@
 #ifndef _OPTIMIZATION_RETRACTIONS_STIEFEL_CAYLEY_RETRACTION__
 #define _OPTIMIZATION_RETRACTIONS_STIEFEL_CAYLEY_RETRACTION__
 
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
 namespace optimization {
 namespace retractions {
 
@@ -40,6 +44,7 @@ public:
         void retract(P& iterate, const V& direction, double dt);
         void extrapolate(P& output, const P& point_one, const P& point_two, double beta);
         double norm_sq(const V& grad, const P& iterate);
+	void generate_random_point(P& iterate);
 };
 
 template<class P, class V> void StiefelCayleyRetraction<P,V>::retract(P& iterate, const V& direction, double dt) {
@@ -63,6 +68,18 @@ template<class P, class V> void StiefelCayleyRetraction<P,V>::extrapolate(P& out
 	X = 2.0 * (P::Identity(point_one.cols(), point_one.cols()) + point_two.transpose() * point_one).partialPivLu().solve(point_two.transpose()).transpose();
 	output = point_one;
 	retract(output, X, 1.0 + beta);
+}
+
+template<class P, class V> void StiefelCayleyRetraction<P,V>::generate_random_point(P& iterate) {
+	srand(time(NULL));
+	for (int j = 0; j < iterate.cols(); ++j) {
+		for (int i = 0; i < iterate.rows(); ++i) {
+			double theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
+			double r = ((double) rand()) / (RAND_MAX);
+			iterate(i,j) = sqrt(-log(r)) * sin(theta);
+		}
+	}
+	iterate = iterate.householderQr().householderQ() * P::Identity(iterate.rows(), iterate.cols());
 }
 
 } // namespace retractions

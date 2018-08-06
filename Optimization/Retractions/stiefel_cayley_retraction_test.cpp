@@ -27,7 +27,6 @@
 #include <iostream>
 
 using ::Eigen::MatrixXd;
-using ::Eigen::HouseholderQR;
 using ::Eigen::IOFormat;
 using ::optimization::retractions::StiefelCayleyRetraction;
 
@@ -37,24 +36,16 @@ int main() {
 	MatrixXd P1(20, 5);
 	MatrixXd V(20, 5);
 	MatrixXd P2(20, 5);
-	for (int i = 0; i < 20; ++i) { // initialize all points randomly
-		for (int j = 0; j < 5; ++j) {
-			double theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
-			double r = ((double) rand()) / (RAND_MAX);
-			P1(i,j) = sqrt(-log(r)) * sin(theta);
-                        theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
-                        r = ((double) rand()) / (RAND_MAX);
-                        P2(i,j) = sqrt(-log(r)) * sin(theta);
-                        theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
-                        r = ((double) rand()) / (RAND_MAX);
-                        V(i,j) = sqrt(-log(r)) * sin(theta);			
+	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
+	retraction.generate_random_point(P1);
+	retraction.generate_random_point(P2);
+	for (int j = 0; j < 5; ++j) {
+		for (int i =  0; i < 20; ++i) {
+                        double theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
+                        double r = ((double) rand()) / (RAND_MAX);
+			V(i,j) = sqrt(-log(r)) * sin(theta); 
 		}
 	}
-	HouseholderQR<MatrixXd> h1(P1);
-	HouseholderQR<MatrixXd> h2(P2);
-	P1 = h1.householderQ() * MatrixXd::Identity(P1.rows(), P1.cols());
-	P2 = h2.householderQ() * MatrixXd::Identity(P2.rows(), P2.cols());
-	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
 	MatrixXd P = P1; // Test to make sure that the retraction has the correct gradient empirically.
 	retraction.retract(P, V, .0001);
 	MatrixXd empV = (P - P1) / .0001;
