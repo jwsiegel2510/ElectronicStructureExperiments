@@ -60,7 +60,8 @@ template<class P, class V> void StiefelCayleyRetraction<P,V>::retract(P& iterate
 template<class P, class V> double StiefelCayleyRetraction<P,V>::norm_sq(const V& grad, const P& iterate) {
         X.resize(grad.rows(), grad.cols());
 	X = grad;
-	X -= iterate * (grad.transpose() * iterate);
+	X -= sqrt(0.5) * iterate * (grad.transpose() * iterate);
+	X -= (1.0 - sqrt(0.5)) * iterate * (iterate.transpose() * grad);
         return (X.transpose() * X).trace();
 }
 
