@@ -19,11 +19,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "../XML-ParameterList/XML_ParameterListArray.h"
-#include "../EigenLib/Eigen/Dense"
-#include "../Optimization/Methods/accelerated_gradient_descent.h"
-#include "../Optimization/Retractions/stiefel_cayley_retraction.h"
-#include "../SCC-Utility/CmdOptionUtility.h"
+#include "XML_ParameterListArray.h"
+#include "Eigen/Dense"
+#include "accelerated_gradient_descent.h"
+#include "stiefel_cayley_retraction.h"
+#include "CmdOptionUtility.h"
 #include "compressed_modes_objective.h"
 #include <cstdio>
 #include <iostream>
@@ -68,19 +68,14 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-/*	// Initialize parameters from XML file.
+	// Initialize parameters from XML file.
 	XML_ParameterListArray paramList;
 	paramList.setAbortOnErrorFlag();
 	paramList.initialize(parameterFileName.c_str());
 	double mu = paramList.getParameterValue("mu", "Parameters");
 	double epsilon = paramList.getParameterValue("epsilon", "Parameters");
 	int n = paramList.getParameterValue("GridPoints", "Parameters");
-	int k = paramList.getParameterValue("ModesCount", "Parameters");*/
-
-	double mu = .1;
-	double epsilon = .001;
-	int n = 100;
-	int k = 50;
+	int k = paramList.getParameterValue("ModesCount", "Parameters");
 
 	// Perform Calculation.
 	MatrixXd iterate(n,k);

@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="no" ?>
+<compressed_modes>
+<Parameters>
+
+<epsilon value=.001/>
+<mu value=.1/>
+<n value = 100/>
+<GridPoints value = 100/>
+<ModesCount value = 50/>
+
+</Parameters>
+</compressed_modes>
+
