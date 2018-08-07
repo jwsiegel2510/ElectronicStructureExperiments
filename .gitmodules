@@ -7,3 +7,6 @@
 [submodule "SCC-Utility"]
 	path = SCC-Utility
 	url = https://github.com/apmcollab/SCC-Utility
+[submodule "MakeScripts"]
+	path = MakeScripts
+	url = https://github.com/apmcollab/SCC-MakeScripts
