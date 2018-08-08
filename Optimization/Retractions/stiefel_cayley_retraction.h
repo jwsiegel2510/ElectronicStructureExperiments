@@ -54,7 +54,7 @@ template<class P, class V> void StiefelCayleyRetraction<P,V>::retract(P& iterate
 	U.block(0, iterate.cols(), iterate.rows(), iterate.cols()) = 0.5 * dt * iterate;
 	VM.block(0, 0, iterate.rows(), iterate.cols()) = iterate;
 	VM.block(0, iterate.cols(), iterate.rows(), iterate.cols()) = direction;
-	iterate = iterate - 2.0 * U * (P::Identity(2 * iterate.cols(), 2 * iterate.cols()) + VM.transpose() * U).partialPivLu().solve(VM.transpose() * iterate);
+	iterate -= 2.0 * U * (P::Identity(2 * iterate.cols(), 2 * iterate.cols()) + VM.transpose() * U).partialPivLu().solve(VM.transpose() * iterate);
 }
 
 template<class P, class V> double StiefelCayleyRetraction<P,V>::norm_sq(const V& grad, const P& iterate) {

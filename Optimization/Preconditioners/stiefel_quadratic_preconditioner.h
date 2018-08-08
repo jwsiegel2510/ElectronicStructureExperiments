@@ -35,48 +35,53 @@
 #include "Eigen/Dense"
 #include <cmath>
 
+
 namespace optimization {
 namespace preconditioners {
 
-template<class P, class V, class Op, class EigenSolver = ::Eigen::SelfAdjointEigenSolver<MatrixXd> > 
+template<class P, class V, class Op, class EigenSolver = ::Eigen::SelfAdjointEigenSolver<::Eigen::MatrixXd> > 
 class StiefelQuadraticPreconditioner {
 private:
 	const Op& operator_;
 	P temp_grad;
 	P temp_iterate;
-	P sym_one;
-	P sym_two;
+	P sym_mat;
 	EigenSolver eigs;
 
 public:
 	StiefelQuadraticPreconditioner() = delete;
 	StiefelQuadraticPreconditioner(Op& operator_in) : operator_(operator_in) {}
 
-	double precondition(V& grad, const P& iterate) {
+	double precondition(V& grad, const P& iterate) { 
 		temp_grad = grad;
 		temp_iterate = iterate;
+
 		operator_.invert(temp_iterate);
-		sym_two = iterate.transpose() * temp_iterate();
+		sym_mat = iterate.transpose() * temp_iterate;
+		eigs.compute(sym_mat);
+
 		operator_.invert(grad);
-		sym_one = iterate.transpose() * grad;
-		sym_one = (sym_one + sym_one.transpose()) / 2.0;
-		eigs.compute(sym_two);
-		sym_one = eigs.eigenvectors().transpose() * sym_one * eigs.eigenvectors();
-		auto eigenvalues = sigs.eigenvalues();
-		for (int j = 0; j < sym_two.cols(); ++j) {
-			for (int i = 0; i < sym_two.rows(); ++i) {
-				sym_two(i,j) = -2.0 * sym_one(i,j) / (eigenvalues(i) + eigenvalues(j));
+		sym_mat = iterate.transpose() * grad;
+		sym_mat = 0.5 * (sym_mat + sym_mat.transpose()).eval();
+		sym_mat = (eigs.eigenvectors().transpose() * sym_mat * eigs.eigenvectors()).eval();
+
+		auto eigenvalues = eigs.eigenvalues();
+		for (int j = 0; j < sym_mat.cols(); ++j) {
+			for (int i = 0; i < sym_mat.rows(); ++i) {
+				sym_mat(i,j) = -2.0 * sym_mat(i,j) / (eigenvalues(i) + eigenvalues(j));
 			}
 		}
-		grad += temp_iterate * eigs.eigenvectors() * sym_two * eigs.eigenvectors().transpose();
+
+		grad += temp_iterate * (eigs.eigenvectors() * sym_mat * eigs.eigenvectors().transpose());
 		
 		// Only use the preconditioned direction if it is still a descent direction.
-		double sq_norm = (grad.transpose() * temp_grad()).trace();
+		double sq_norm = (grad.transpose() * temp_grad).trace();
 		if (sq_norm > 0) {
-			grad -= 0.5 * iterate * (iterate.transpose() * grad);
+			grad -= (0.5 * iterate * (iterate.transpose() * grad)).eval();
 			return sq_norm;
 		}
-		
+
+		// If preconditioned direction is not used, return original gradient along with its norm.
 		grad = temp_grad;
 		temp_grad -= sqrt(0.5) * iterate * (grad.transpose() * iterate);
 		temp_grad -= (1.0 - sqrt(0.5)) * iterate * (iterate.transpose() * grad);

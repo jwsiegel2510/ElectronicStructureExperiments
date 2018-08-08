@@ -1,6 +1,6 @@
  /* This file is part of an open source library for electronic structure calculations.
  *
- *  It contains code which tests the Cayley retraction. 
+ *  It contains code which tests a tangent space quadratic preconditioner on the Stiefel manifold. 
  *
  *  Copyright (C) 2018 Jonathan W. Siegel
  *
@@ -18,6 +18,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "stiefel_quadratic_preconditioner.h"
 #include "stiefel_cayley_retraction.h"
 #include "Eigen/Dense"
 #include <cstdio>
@@ -26,19 +27,41 @@
 #include <cmath>
 #include <iostream>
 
+namespace {
 using ::Eigen::MatrixXd;
 using ::Eigen::IOFormat;
+using ::optimization::preconditioners::StiefelQuadraticPreconditioner;
 using ::optimization::retractions::StiefelCayleyRetraction;
+
+struct DiagonalQuadratic {
+
+void apply(MatrixXd& X) const {
+	for (int j = 0; j < X.cols(); ++j) {
+		for (int i = 0; i < X.rows(); ++i) {
+			X(i,j) *= (i + 1);
+		}
+	}
+}
+
+void invert(MatrixXd& X) const {
+	for (int j = 0; j < X.cols(); ++j) {
+		for (int i = 0; i < X.rows(); ++i) {
+			X(i,j) /= (i + 1);
+		}
+	}
+}
+
+};
+
+}
 
 int main() {
 	srand(time(NULL)); // initialize random seed.
 	const IOFormat fmt(-1, 1, "\t", " \n ", "(", ")", "\n", "\n");
-	MatrixXd P1(20, 5);
+	MatrixXd P(20, 5);
 	MatrixXd V(20, 5);
-	MatrixXd P2(20, 5);
 	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
-	retraction.generate_random_point(P1);
-	retraction.generate_random_point(P2);
+	retraction.generate_random_point(P);
 	for (int j = 0; j < 5; ++j) {
 		for (int i =  0; i < 20; ++i) {
                         double theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
@@ -46,13 +69,18 @@ int main() {
 			V(i,j) = sqrt(-log(r)) * sin(theta); 
 		}
 	}
-	MatrixXd P = P1; // Test to make sure that the retraction has the correct gradient empirically.
-	retraction.retract(P, V, .0001);
-	MatrixXd empV = (P - P1) / .0001;
-	MatrixXd trueV = V - P1 * (V.transpose() * P1);
-	std::cout << (empV - trueV).format(fmt) << "\n";
-	printf("Empirical Gradient Error: %lf \n", ((empV - trueV).transpose() * (empV - trueV)).trace());
-	MatrixXd Q = P2;
-	retraction.extrapolate(P, P1, Q, 0.0);
-	printf("Extrapolation Error: %lf \n", ((P - P2).transpose() * (P - P2)).trace());
+	MatrixXd PreV = V;
+	DiagonalQuadratic Op;
+	StiefelQuadraticPreconditioner<MatrixXd, MatrixXd, DiagonalQuadratic> preconditioner(Op);
+	preconditioner.precondition(PreV, P);
+	if ((PreV - V).norm() < 1e-7) {
+		printf("Preconditioned Point rejected, may want to run test again.\n");
+	} else {
+		printf("Preconditioner dual tangent space error: %lf \n", (P.transpose() * PreV + PreV.transpose() * P).norm());
+		V -= (0.5 * P * (P.transpose() * V + V.transpose() * P)).eval();
+		PreV += (P * (P.transpose() * PreV)).eval();
+		Op.apply(PreV);
+		PreV -= (0.5 * P * (P.transpose() * PreV + PreV.transpose() * P)).eval();
+		printf("Preconditioner inversion error: %lf \n", (V - PreV).norm());
+	}
 }
