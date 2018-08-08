@@ -33,7 +33,8 @@ CXXFLAGS+= -O4
 
 CPPfiles+= ./laplace_compressed_modes.cpp
 
-INCLUDES+= -I./ -I../Optimization/Methods -I../Optimization/Retractions 
+INCLUDES+= -I./ -I../Optimization/Methods -I../Optimization/Retractions
+INCLUDES+= -I../Optimization/Preconditioners 
 INCLUDES+= -I../XML-ParameterList -I../EigenLib -I../SCC-Utility
 
 # Library specification 
