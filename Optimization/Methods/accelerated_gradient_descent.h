@@ -29,10 +29,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef _OPTIMIZATION_METHODS_GRADIENT_DESCENT__
-#define _OPTIMIZATION_METHODS_GRADIENT_DESCENT__
+#ifndef _OPTIMIZATION_METHODS_ACCELERATED_GRADIENT_DESCENT__
+#define _OPTIMIZATION_METHODS_ACCELERATED_GRADIENT_DESCENT__
 
 #include<cmath>
+#include<cstdio>
 
 namespace optimization {
 namespace methods {
@@ -88,6 +89,8 @@ int accelerated_gradient_descent(P& iterate, Objective<P, V, AdditionalArgsObj .
 				y_iterate = temporary_iterate;
                         }
 		}
+	
+		printf("%lf %lf %d \n", step_size, grad_norm_sq, k);
 
 		// Restart momentum if there is not a sufficient decrease in the objective.
 		if (objective.evaluate(y_iterate) > objective.evaluate(iterate) - restart_rho * step_size * grad_norm_sq) {
