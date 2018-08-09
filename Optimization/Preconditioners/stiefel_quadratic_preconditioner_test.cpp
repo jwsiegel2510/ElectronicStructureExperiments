@@ -29,26 +29,28 @@
 
 namespace {
 using ::Eigen::MatrixXd;
+using ::Eigen::PartialPivLU;
 using ::Eigen::IOFormat;
 using ::optimization::preconditioners::StiefelQuadraticPreconditioner;
 using ::optimization::retractions::StiefelCayleyRetraction;
 
-struct DiagonalQuadratic {
+class DiagonalQuadratic {
+private:
+	MatrixXd M;
+	PartialPivLU<MatrixXd> Inv;
+
+public:
+
+DiagonalQuadratic(const MatrixXd& Mat) : M(Mat) {
+	Inv = M.partialPivLu();
+}
 
 void apply(MatrixXd& X) const {
-	for (int j = 0; j < X.cols(); ++j) {
-		for (int i = 0; i < X.rows(); ++i) {
-			X(i,j) *= (i + 1);
-		}
-	}
+	X = (M * X).eval();
 }
 
 void invert(MatrixXd& X) const {
-	for (int j = 0; j < X.cols(); ++j) {
-		for (int i = 0; i < X.rows(); ++i) {
-			X(i,j) /= (i + 1);
-		}
-	}
+	X = Inv.solve(X);
 }
 
 };
@@ -69,8 +71,17 @@ int main() {
 			V(i,j) = sqrt(-log(r)) * sin(theta); 
 		}
 	}
+	MatrixXd Operator(20,20);
+	for (int j = 0; j < 20; ++j) {
+                for (int i =  0; i < 20; ++i) {
+                        double theta = 2 * M_PI * ((double) rand()) / (RAND_MAX);
+                        double r = ((double) rand()) / (RAND_MAX);
+                        Operator(i,j) = sqrt(-log(r)) * sin(theta);
+                }
+        }
+	Operator = (Operator * Operator.transpose()).eval();
 	MatrixXd PreV = V;
-	DiagonalQuadratic Op;
+	DiagonalQuadratic Op(Operator);
 	StiefelQuadraticPreconditioner<MatrixXd, MatrixXd, DiagonalQuadratic> preconditioner(Op);
 	preconditioner.precondition(PreV, P);
 	if ((PreV - V).norm() < 1e-7) {
