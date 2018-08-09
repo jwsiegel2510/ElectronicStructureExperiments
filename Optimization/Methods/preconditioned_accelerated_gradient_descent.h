@@ -37,7 +37,6 @@
 #define _OPTIMIZATION_METHODS_PRECONDITIONED_ACCELERATED_GRADIENT_DESCENT__
 
 #include<cmath>
-#include<cstdio>
 
 namespace optimization {
 namespace methods {
@@ -69,7 +68,7 @@ int preconditioned_accelerated_gradient_descent(P& iterate, Objective<P, V, Addi
 		}
 
 		// Apply Preconditioner
-		double preconditioned_grad_norm_sq = preconditioner.precondition(grad, iterate);
+		double preconditioned_grad_norm_sq = preconditioner.precondition(grad, y_iterate);
 
 		// Decrease step size until the Armijo condition is met (allow an increase if k = 0).
 		temporary_iterate = y_iterate;
@@ -97,10 +96,8 @@ int preconditioned_accelerated_gradient_descent(P& iterate, Objective<P, V, Addi
                         }
 		}
 
-		printf("%lf %lf %lf %d \n", step_size, grad_norm_sq, preconditioned_grad_norm_sq, k);
-
 		// Restart momentum if there is not a sufficient decrease in the objective.
-		if (objective.evaluate(y_iterate) > objective.evaluate(iterate) - restart_rho * step_size * preconditioned_grad_norm_sq) {
+		if (obj > objective.evaluate(iterate) - restart_rho * step_size * preconditioned_grad_norm_sq) {
 			y_iterate = iterate;
 			k = 0;
 		} else {
