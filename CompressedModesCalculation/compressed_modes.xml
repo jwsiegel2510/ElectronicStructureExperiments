@@ -5,8 +5,8 @@
 <epsilon value=.001/>
 <mu value=.1/>
 <tolerance value = .001/>
-<GridPoints value = 1000/>
-<ModesCount value = 10/>
+<GridPoints value = 2000/>
+<ModesCount value = 20/>
 
 </Parameters>
 </compressed_modes>

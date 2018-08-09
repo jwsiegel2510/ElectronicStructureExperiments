@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
 	std::cout << "Iteration Count: " << preconditioned_accelerated_gradient_descent(iterate, objective, retraction, preconditioner, tol) << "\n";
 
 	// Output Result.
+	printf("Orthogonality Error: %0.15lf \n", (iterate.transpose() * iterate - MatrixXd::Identity(k,k)).norm());
 	const IOFormat fmt(-1, 1, "\t", " \n ", "(", ")", "\n", "\n");
 	std::ofstream out;
 	out.open(outputFileName);
