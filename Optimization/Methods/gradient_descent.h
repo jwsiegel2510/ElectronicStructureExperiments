@@ -54,7 +54,7 @@ int gradient_descent(P& iterate, Objective<P, V, AdditionalArgsObj ... > objecti
 
 		// Calculate the squared norm of the gradient and check stopping condition.
 		double grad_norm_sq = retraction.norm_sq(grad, temporary_iterate);
-		if (sqrt(grad_norm_sq) < gtol) {
+		if (sqrt(grad_norm_sq) < gtol || step_size < 1e-13) {
 			return it;
 		}
 

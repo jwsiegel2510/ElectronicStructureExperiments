@@ -63,7 +63,7 @@ int preconditioned_accelerated_gradient_descent(P& iterate, Objective<P, V, Addi
 		objective.evaluate_grad(grad, y_iterate);
 
 		double grad_norm_sq = retraction.norm_sq(grad, y_iterate);
-		if (sqrt(grad_norm_sq) < gtol) {
+		if (sqrt(grad_norm_sq) < gtol || step_size < 1e-13) {
 			iterate = y_iterate; return it;
 		}
 
