@@ -21,7 +21,7 @@
 
 #include "XML_ParameterListArray.h"
 #include "Eigen/Dense"
-#include "accelerated_gradient_descent.h"
+#include "preconditioned_accelerated_gradient_descent.h"
 #include "stiefel_cayley_retraction.h"
 #include "stiefel_quadratic_preconditioner.h"
 #include "CmdOptionUtility.h"
@@ -33,22 +33,29 @@
 namespace {
 	using ::Eigen::MatrixXd;
 	using ::Eigen::IOFormat;
-	using ::optimization::methods::accelerated_gradient_descent;
+	using ::optimization::methods::preconditioned_accelerated_gradient_descent;
 	using ::optimization::retractions::StiefelCayleyRetraction;
 	using ::optimization::preconditioners::StiefelQuadraticPreconditioner;
 	using ::compressed_modes::CompressedModesObjective;
 
-	struct LaplaceOperator { // 1D Laplacian operator on Eigen matrices.
+	class LaplaceOperator { // 1D Laplacian operator on Eigen matrices.
+	private:
+		int n;
+
+	public:
+
+		LaplaceOperator(int n_) : n(n_) {}	
+
 		MatrixXd apply(const MatrixXd& input) const {
 			MatrixXd output(input);
 			for (int j = 0; j < input.cols(); ++j) {
 				for (int i = 0; i < input.rows(); ++i) {
 					if (i == 0) {
-						output(i,j) = 2 * input(i,j) - input(i+1,j);
+						output(i,j) = (2 * input(i,j) - input(i+1,j)) * n;
 					} else if (i == (input.rows() - 1)) {
-						output(i,j) = input(i,j) - input(i-1,j);
+						output(i,j) = (input(i,j) - input(i-1,j)) * n;
 					} else {
-						output(i,j) = 2 * input(i,j) - input(i+1,j) - input(i-1,j);
+						output(i,j) = (2 * input(i,j) - input(i+1,j) - input(i-1,j)) * n;
 					}
 				}
 			}
@@ -57,7 +64,7 @@ namespace {
 
 		void invert(MatrixXd& input) const {
 			if (input.rows() <= 1) {
-				input *= 0.5; return;
+				input /= (2 * n); return;
 			}
 			for (int j = 0; j < input.cols(); ++j) {
 				for (int i = input.rows() - 2; i >= 0; --i) {
@@ -66,6 +73,7 @@ namespace {
 				for (int i = 1; i < input.rows(); ++i) {
 					input(i,j) += input(i-1,j);
 				}
+				for (int i = 0; i < input.rows(); ++i) input(i,j) /= n;
 			}
 		}
 	};
@@ -89,17 +97,18 @@ int main(int argc, char** argv) {
 	paramList.initialize(parameterFileName.c_str());
 	double mu = paramList.getParameterValue("mu", "Parameters");
 	double epsilon = paramList.getParameterValue("epsilon", "Parameters");
+	double tol = paramList.getParameterValue("tolerance", "Parameters");
 	int n = paramList.getParameterValue("GridPoints", "Parameters");
 	int k = paramList.getParameterValue("ModesCount", "Parameters");
 
 	// Perform Calculation.
 	MatrixXd iterate(n,k);
-	LaplaceOperator op_;
-	CompressedModesObjective<MatrixXd, MatrixXd, LaplaceOperator> objective(op_, mu, epsilon);
+	LaplaceOperator op_(n);
+	CompressedModesObjective<MatrixXd, MatrixXd, LaplaceOperator> objective(op_, mu / n, epsilon);
 	StiefelQuadraticPreconditioner<MatrixXd, MatrixXd, LaplaceOperator> preconditioner(op_);
 	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
 	retraction.generate_random_point(iterate);
-	std::cout << "Iteration Count: " << accelerated_gradient_descent(iterate, objective, retraction) << "\n";
+	std::cout << "Iteration Count: " << preconditioned_accelerated_gradient_descent(iterate, objective, retraction, preconditioner, tol) << "\n";
 
 	// Output Result.
 	const IOFormat fmt(-1, 1, "\t", " \n ", "(", ")", "\n", "\n");

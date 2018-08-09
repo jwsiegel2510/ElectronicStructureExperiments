@@ -48,7 +48,7 @@ public:
 			for (int i = 0; i < input.rows(); ++i) {
 				if (input(i,j) > epsilon) {
 					obj += mu * (input(i,j) - epsilon / 2.0);
-				} else if (input(i,j) < -epsilon) {
+				} else if (input(i,j) < -1.0 * epsilon) {
 					obj += mu * (-input(i,j) - epsilon / 2.0);
 				} else {
 					obj += mu * input(i,j) * input(i,j) / (2.0 * epsilon);
@@ -65,7 +65,7 @@ public:
 			for (int i = 0; i < input.rows(); ++i) {
 				if (input(i,j) > epsilon) {
 					grad(i,j) += mu;
-				} else if (input(i,j) < -epsilon) {
+				} else if (input(i,j) < -1.0 * epsilon) {
 					grad(i,j) -= mu;
 				} else {
 					grad(i,j) += mu * input(i,j) / epsilon;
