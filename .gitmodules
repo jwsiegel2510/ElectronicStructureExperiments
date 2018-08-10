@@ -16,3 +16,6 @@
 [submodule "NuclearPotential"]
 	path = NuclearPotential
 	url = https://github.com/canderson6151/NuclearPotential
+[submodule "Qdomain"]
+	path = Qdomain
+	url = https://github.com/canderson6151/Qdomain
