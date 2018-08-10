@@ -27,7 +27,6 @@
 #include "stiefel_cayley_retraction.h"
 #include "stiefel_quadratic_preconditioner.h"
 #include "CmdOptionUtility.h"
-#include "compressed_modes_objective.h"
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -42,23 +41,23 @@ namespace {
 
 	template <class P = MatrixXd, class V = MatrixXd> class HartreeFockObjective {
 	private:
-		const RealOrbitalIntegralsData& integrals_data;
+		RealOrbitalIntegralsData& integrals_data;
 		int basis_count;
 	
 	public:
 		HartreeFockObjective() = delete;
-		HartreeFockObjective(const RealOrbitalIntegralsData& input_data) : integrals_data(input_data) {
+		HartreeFockObjective(RealOrbitalIntegralsData& input_data) : integrals_data(input_data) {
 			basis_count = integrals_data.getOrbitalBasisCount();
 		}
 
 		// The input is expected to have 2*basis_count rows (due to spin effects).
-		double evaluate(const& MatrixXd iterate) {
+		double evaluate(const P& iterate) {
 			double output = 0;
 			// Evaluate the single particle energy.
 			for (int j = 0; j < iterate.cols(); ++j) {
 				for (int i = 0; i < basis_count; ++i) {
 					for (int k = 0; k < basis_count; ++k) {
-						output += integrals_data(i,k) * (iterate(2*i,j) * iterate(2*k,j) + iterate(2*i + 1,j) * iterate(2*k + 1,j);
+						output += integrals_data(i,k) * (iterate(2*i,j) * iterate(2*k,j) + iterate(2*i + 1,j) * iterate(2*k + 1,j));
 					}
 				}
 			}
@@ -84,12 +83,11 @@ namespace {
 			return output;
 		}
 
-		void evaluate_grad(MatrixXd& grad, const MatrixXd& iterate) {
-			grad = MatrixXd::Zero(input.rows(), input.cols());
+		void evaluate_grad(V& grad, const P& iterate) {
+			grad = V::Zero(iterate.rows(), iterate.cols());
                         for (int j = 0; j < iterate.cols(); ++j) {
                                 for (int i = 0; i < basis_count; ++i) {
                                         for (int k = 0; k < basis_count; ++k) {
-                                                output += integrals_data(i,k) * (iterate(2*i,j) * iterate(2*k,j) + iterate(2*i + 1,j) * iterate(2*k + 1,j);
 						grad(2*i,j) += integrals_data(i,k) * iterate(2*k,j);
 						grad(2*i+1,j) += integrals_data(i,k) * iterate(2*k+1,j);
                                                 grad(2*k,j) += integrals_data(i,k) * iterate(2*i,j);
@@ -105,15 +103,12 @@ namespace {
                                                                 for (int k2 = 0; k2 < basis_count; ++k2) {
 									grad(2*i1,j1) += integrals_data(i1,i2,k1,k2) * iterate(2*i2,j1) * (iterate(2*k1,j2) * iterate(2*k2,j2) + iterate(2*k1+1,j2) * iterate(2*k2+1,j2));
 									grad(2*i2,j1) += integrals_data(i1,i2,k1,k2) * iterate(2*i1,j1) * (iterate(2*k1,j2) * iterate(2*k2,j2) + iterate(2*k1+1,j2) * iterate(2*k2+1,j2));
-									grad(2*i1+1,j1) += integrals_data(i1,i2,k1,k2) * iterate(2*i2+1,j1)) * (iterate(2*k1,j2) * iterate(2*k2,j2) + iterate(2*k1+1,j2) * iterate(2*k2+1,j2));
+									grad(2*i1+1,j1) += integrals_data(i1,i2,k1,k2) * iterate(2*i2+1,j1) * (iterate(2*k1,j2) * iterate(2*k2,j2) + iterate(2*k1+1,j2) * iterate(2*k2+1,j2));
 									grad(2*i2+1,j1) += integrals_data(i1,i2,k1,k2) * iterate(2*i1+1,j1) * (iterate(2*k1,j2) * iterate(2*k2,j2) + iterate(2*k1+1,j2) * iterate(2*k2+1,j2));
 									grad(2*k1,j2) += integrals_data(i1,i2,k1,k2) * iterate(2*k2,j2) * (iterate(2*i1,j1) * iterate(2*i2,j1) + iterate(2*i1+1,j1) * iterate(2*i2+1,j1));
 									grad(2*k2,j2) += integrals_data(i1,i2,k1,k2) * iterate(2*k1,j2) * (iterate(2*i1,j1) * iterate(2*i2,j1) + iterate(2*i1+1,j1) * iterate(2*i2+1,j1));
 									grad(2*k1+1,j2) += integrals_data(i1,i2,k1,k2) * iterate(2*k2+1,j2) * (iterate(2*i1,j1) * iterate(2*i2,j1) + iterate(2*i1+1,j1) * iterate(2*i2+1,j1));
 									grad(2*k2+1,j2) += integrals_data(i1,i2,k1,k2) * iterate(2*k1+1,j2) * (iterate(2*i1,j1) * iterate(2*i2,j1) + iterate(2*i1+1,j1) * iterate(2*i2+1,j1));
-                                                                        output -= integrals_data(i1,k1,i2,k2) *
-                                                                                        (iterate(2*i1,j1) * iterate(2*k1,j2) + iterate(2*i1+1,j1) * iterate(2*k1+1,j2)) *
-                                                                                        (iterate(2*i2,j1) * iterate(2*k2,j2) + iterate(2*i2+1,j1) * iterate(2*k2+1,j2));
 									grad(2*i1,j1) -= integrals_data(i1,k1,i2,k2) * iterate(2*k1,j2) * (iterate(2*i2,j1) * iterate(2*k2,j2) + iterate(2*i2+1,j1) * iterate(2*k2+1,j2));
 									grad(2*k1,j2) -= integrals_data(i1,k1,i2,k2) * iterate(2*i1,j1) * (iterate(2*i2,j1) * iterate(2*k2,j2) + iterate(2*i2+1,j1) * iterate(2*k2+1,j2));
 									grad(2*i1+1,j1) -= integrals_data(i1,k1,i2,k2) * iterate(2*k1+1,j2) * (iterate(2*i2,j1) * iterate(2*k2,j2) + iterate(2*i2+1,j1) * iterate(2*k2+1,j2));
@@ -132,7 +127,7 @@ namespace {
 	};
 }
 
-int main() {
+int main(int argc, char** argv) {
 	// Get input XML filename and output filename.
 	string parameterFileName;
 	string outputFileName;
@@ -153,7 +148,7 @@ int main() {
 	string integral_data_file = paramList.getParameterValue("integral_data", "Parameters");
 
 	// Load Orbital Integral data.
-	ReadOrbitalIntegralsData integrals_data;
+	RealOrbitalIntegralsData integrals_data;
 	integrals_data.inputOrbitalIntegralData(integral_data_file);
 	int n = integrals_data.getOrbitalBasisCount();
 
@@ -165,5 +160,5 @@ int main() {
 	std::cout << "Iteration Count: " << accelerated_gradient_descent(iterate, objective, retraction, tol) << "\n";
 	
 	// Output ground state energy.
-	std::cout objective.evaluate(iterate);
+	std::cout << objective.evaluate(iterate);
 }
