@@ -125,6 +125,29 @@ namespace {
                         }
 		}
 	};
+
+	template<class P = MatrixXd, class V = MatrixXd> class SingleParticleOperator {
+	private:
+		::Eigen::PartialPivLU<MatrixXd> Inv;
+
+	public:
+		SingleParticleOperator(RealOrbitalIntegralsData& input_data) {
+			MatrixXd Mat(2 * input_data.getOrbitalBasisCount(), 2 * input_data.getOrbitalBasisCount());
+			for (int i = 0; i < input_data.getOrbitalBasisCount(); ++i) {
+				for (int j = 0; j < input_data.getOrbitalBasisCount(); ++j) {
+					Mat(2*i,2*j) = input_data(i,j);
+					Mat(2*i+1,2*j+1) = input_data(i,j);
+					Mat(2*i,2*j+1) = 0;
+					Mat(2*i+1,2*j) = 0;
+				}
+			}
+			Inv = Mat.partialPivLu();
+		}
+
+		void invert(MatrixXd& X) const {
+			X = Inv.solve(X);
+		}
+	};
 }
 
 int main(int argc, char** argv) {
@@ -155,10 +178,12 @@ int main(int argc, char** argv) {
 	// Perform Calculation.
 	MatrixXd iterate(2*n,k);
 	HartreeFockObjective<> objective(integrals_data);
+	SingleParticleOperator<> op_(integrals_data);
+//	StiefelQuadraticPreconditioner<MatrixXd, MatrixXd, SingleParticleOperator<>> preconditioner(op_);
 	StiefelCayleyRetraction<MatrixXd, MatrixXd> retraction;
 	retraction.generate_random_point(iterate);
 	std::cout << "Iteration Count: " << accelerated_gradient_descent(iterate, objective, retraction, tol) << "\n";
 	
 	// Output ground state energy.
-	std::cout << objective.evaluate(iterate);
+	std::cout << objective.evaluate(iterate) << "\n";;
 }
