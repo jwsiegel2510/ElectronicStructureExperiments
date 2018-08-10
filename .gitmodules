@@ -10,3 +10,9 @@
 [submodule "MakeScripts"]
 	path = MakeScripts
 	url = https://github.com/apmcollab/SCC-MakeScripts
+[submodule "MultiParticleHamiltonian"]
+	path = MultiParticleHamiltonian
+	url = https://github.com/canderson6151/MultiParticleHamiltonian
+[submodule "NuclearPotential"]
+	path = NuclearPotential
+	url = https://github.com/canderson6151/NuclearPotential
